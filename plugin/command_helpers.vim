@@ -1,11 +1,11 @@
-" helpers.vim
+" command_helpers.vim
 " Maintainer: Phong Nguyen
 " Version:    0.1.0
 
-if exists('g:loaded_vim_helpers')
+if exists('g:loaded_vim_command_helpers')
     finish
 endif
-let g:loaded_vim_helpers = 1
+let g:loaded_vim_command_helpers = 1
 
 " Copy yanked text to clipboard
 command! CopyYankedText let [@+, @*] = [@", @"]
