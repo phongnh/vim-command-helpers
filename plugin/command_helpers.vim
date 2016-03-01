@@ -25,12 +25,26 @@ elseif executable('sift')
 endif
 set grepformat=%f:%l:%c:%m,%f:%l:%m
 
+let s:is_windows = has('win16') || has('win32') || has('win64') || has('win32unix')
+
 " Gitk
 if executable('gitk')
-    command! -bar -nargs=* -complete=dir -complete=file Gitk execute "silent! !gitk <args>" | redraw!
+    command! -bang -nargs=* -complete=dir -complete=file -complete=custom Gitk call <SID>Gitk("<args>", <bang>0)
+
+    function! s:Gitk(options, bang) abort
+        let cmd = printf('silent! !gitk %s', a:options)
+
+        if !s:is_windows && a:bang
+            let cmd = cmd . " &"
+        endif
+
+        execute cmd
+
+        redraw!
+    endfunction
 endif
 
-if has('win16') || has('win32') || has('win64') || has('win32unix')
+if s:is_windows
     finish
 endif
 
