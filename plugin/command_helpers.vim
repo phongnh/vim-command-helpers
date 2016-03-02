@@ -1,6 +1,6 @@
 " command_helpers.vim
 " Maintainer: Phong Nguyen
-" Version:    0.2.0
+" Version:    0.2.1
 
 if exists('g:loaded_vim_command_helpers')
     finish
@@ -29,11 +29,17 @@ let s:is_windows = has('win16') || has('win32') || has('win64') || has('win32uni
 
 " Gitk
 if executable('gitk')
-    command! -bang -nargs=? -complete=custom,<SID>ListGitBranches Gitk call <SID>Gitk(<q-args>, <bang>0)
+    command! -nargs=? -complete=custom,<SID>ListGitBranches Gitk call <SID>Gitk(<q-args>)
 
-    function! s:Gitk(options, bang) abort
+    let s:gitk_cmd = 'silent! !gitk %s'
+
+    if !s:is_windows
+        let s:gitk_cmd .= ' &'
+    endif
+
+    function! s:Gitk(options) abort
         if s:InGitRepo()
-            call s:RunGitk(a:options, a:bang)
+            call s:RunGitk(a:options)
         endif
     endfunction
 
@@ -42,43 +48,33 @@ if executable('gitk')
         return strlen(git)
     endfunction
 
-    function! s:RunGitk(options, bang) abort
-        let cmd = printf('silent! !gitk %s', a:options)
-
-        if !s:is_windows && a:bang
-            let cmd = cmd . " &"
-        endif
-
-        execute cmd
-
+    function! s:RunGitk(options) abort
+        execute printf(s:gitk_cmd, a:options)
         redraw!
     endfunction
 
     function! s:ListGitBranches(A, L, P) abort
-        if s:InGitRepo()
+        if s:InGitRepo() && executable('git')
             let output = system("git branch -a | cut -c 3-")
             let output = substitute(output, '\s->\s[0-9a-zA-Z_\-]\+/[0-9a-zA-Z_\-]\+', '', 'g')
+            let output = substitute(output, 'remotes/', '', 'g')
             return output
         else
             return ''
         endif
     endfunction
 
-    command! -bang -nargs=? -complete=file GitkFile call <SID>GitkFile(<q-args>, <bang>0)
+    command! -nargs=? -complete=file GitkFile call <SID>GitkFile(<q-args>)
 
-    function! s:GitkFile(path, bang) abort
-        if !s:InGitRepo()
-            return
-        endif
-
-        let path = a:path
-
-        if empty(path)
-            let path = expand("%")
-        endif
-
-        if strlen(path)
-            call s:RunGitk(shellescape(path), a:bang)
+    function! s:GitkFile(path) abort
+        if s:InGitRepo()
+            let path = a:path
+            if empty(path)
+                let path = expand("%")
+            endif
+            if strlen(path)
+                call s:RunGitk(shellescape(path))
+            endif
         endif
     endfunction
 endif
