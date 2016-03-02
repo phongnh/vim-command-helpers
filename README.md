@@ -3,7 +3,7 @@ My vim command helpers:
 
 * CopyYankedText
 * Grep
-* Gitk
+* Gitk, GitkFile
 * Tig
 * SW
 * Cls

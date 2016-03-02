@@ -1,6 +1,6 @@
 " command_helpers.vim
 " Maintainer: Phong Nguyen
-" Version:    0.1.1
+" Version:    0.2.0
 
 if exists('g:loaded_vim_command_helpers')
     finish
@@ -29,9 +29,20 @@ let s:is_windows = has('win16') || has('win32') || has('win64') || has('win32uni
 
 " Gitk
 if executable('gitk')
-    command! -bang -nargs=* -complete=dir -complete=file -complete=custom Gitk call <SID>Gitk("<args>", <bang>0)
+    command! -bang -nargs=? -complete=custom,<SID>ListGitBranches Gitk call <SID>Gitk(<q-args>, <bang>0)
 
     function! s:Gitk(options, bang) abort
+        if s:InGitRepo()
+            call s:RunGitk(a:options, a:bang)
+        endif
+    endfunction
+
+    function! s:InGitRepo() abort
+        let git = finddir('.git', getcwd() . ';')
+        return strlen(git)
+    endfunction
+
+    function! s:RunGitk(options, bang) abort
         let cmd = printf('silent! !gitk %s', a:options)
 
         if !s:is_windows && a:bang
@@ -41,6 +52,34 @@ if executable('gitk')
         execute cmd
 
         redraw!
+    endfunction
+
+    function! s:ListGitBranches(A, L, P) abort
+        if s:InGitRepo()
+            let output = system("git branch -a | cut -c 3-")
+            let output = substitute(output, '\s->\s[0-9a-zA-Z_\-]\+/[0-9a-zA-Z_\-]\+', '', 'g')
+            return output
+        else
+            return ''
+        endif
+    endfunction
+
+    command! -bang -nargs=? -complete=file GitkFile call <SID>GitkFile(<q-args>, <bang>0)
+
+    function! s:GitkFile(path, bang) abort
+        if !s:InGitRepo()
+            return
+        endif
+
+        let path = a:path
+
+        if empty(path)
+            let path = expand("%")
+        endif
+
+        if strlen(path)
+            call s:RunGitk(shellescape(path), a:bang)
+        endif
     endfunction
 endif
 
