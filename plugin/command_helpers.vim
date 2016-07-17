@@ -1,6 +1,6 @@
 " command_helpers.vim
 " Maintainer: Phong Nguyen
-" Version:    0.2.1
+" Version:    0.2.2
 
 if exists('g:loaded_vim_command_helpers')
     finish
@@ -97,7 +97,7 @@ if executable('tig')
 endif
 
 " Sudo write
-command! -bang SW w<bang> !sudo tee % >/dev/null
+command! -bang SW w<bang> !sudo tee >/dev/null %
 
 " Clear terminal console
 command! -bar Cls execute 'silent! !clear' | redraw!
