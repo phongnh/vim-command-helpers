@@ -1,11 +1,10 @@
 " command_helpers.vim
 " Maintainer: Phong Nguyen
-" Version:    0.2.2
+" Version:    0.3.0
 
 if exists('g:loaded_vim_command_helpers')
     finish
 endif
-let g:loaded_vim_command_helpers = 1
 
 " Copy yanked text to clipboard
 command! CopyYankedText let [@+, @*] = [@", @"]
@@ -13,7 +12,10 @@ command! CopyYankedText let [@+, @*] = [@", @"]
 " Grep
 command! -bar -nargs=+ -complete=file Grep silent! grep! <args> | cwindow | redraw!
 
-if executable('ag')
+if executable('rg')
+    " https://github.com/BurntSushi/ripgrep
+    let &grepprg = 'rg --vimgrep --smart-case --no-heading'
+elseif executable('ag')
     " https://github.com/ggreer/the_silver_searcher
     let &grepprg = 'ag --vimgrep --smart-case --ignore ''.hg'' --ignore ''.svn'' --ignore ''.git'' --ignore ''.bzr'''
 elseif executable('pt')
@@ -101,3 +103,5 @@ command! -bang SW w<bang> !sudo tee >/dev/null %
 
 " Clear terminal console
 command! -bar Cls execute 'silent! !clear' | redraw!
+
+let g:loaded_vim_command_helpers = 1
