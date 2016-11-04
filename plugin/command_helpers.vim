@@ -1,6 +1,6 @@
 " command_helpers.vim
 " Maintainer: Phong Nguyen
-" Version:    0.3.0
+" Version:    0.3.1
 
 if exists('g:loaded_vim_command_helpers')
     finish
@@ -14,7 +14,7 @@ command! -bar -nargs=+ -complete=file Grep silent! grep! <args> | cwindow | redr
 
 if executable('rg')
     " https://github.com/BurntSushi/ripgrep
-    let &grepprg = 'rg --vimgrep --smart-case --no-heading'
+    let &grepprg = 'rg --vimgrep --smart-case -H --no-heading'
 elseif executable('ag')
     " https://github.com/ggreer/the_silver_searcher
     let &grepprg = 'ag --vimgrep --smart-case --ignore ''.hg'' --ignore ''.svn'' --ignore ''.git'' --ignore ''.bzr'''
