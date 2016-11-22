@@ -1,6 +1,6 @@
 " command_helpers.vim
 " Maintainer: Phong Nguyen
-" Version:    0.3.1
+" Version:    0.4.0
 
 if exists('g:loaded_vim_command_helpers')
     finish
@@ -29,44 +29,41 @@ set grepformat=%f:%l:%c:%m,%f:%l:%m
 
 let s:is_windows = has('win16') || has('win32') || has('win64') || has('win32unix')
 
+" Git helpers
+function! s:InGitRepo() abort
+    let git = finddir('.git', getcwd() . ';')
+    return strlen(git)
+endfunction
+
+function! s:ListGitBranches(A, L, P) abort
+    if s:InGitRepo() && executable('git')
+        let output = system("git branch -a | cut -c 3-")
+        let output = substitute(output, '\s->\s[0-9a-zA-Z_\-]\+/[0-9a-zA-Z_\-]\+', '', 'g')
+        let output = substitute(output, 'remotes/', '', 'g')
+        return output
+    else
+        return ''
+    endif
+endfunction
+
 " Gitk
 if executable('gitk')
-    command! -nargs=? -complete=custom,<SID>ListGitBranches Gitk call <SID>Gitk(<q-args>)
-
     let s:gitk_cmd = 'silent! !gitk %s'
 
     if !s:is_windows
         let s:gitk_cmd .= ' &'
     endif
 
-    function! s:Gitk(options) abort
-        if s:InGitRepo()
-            call s:RunGitk(a:options)
-        endif
-    endfunction
-
-    function! s:InGitRepo() abort
-        let git = finddir('.git', getcwd() . ';')
-        return strlen(git)
-    endfunction
-
     function! s:RunGitk(options) abort
         execute printf(s:gitk_cmd, a:options)
         redraw!
     endfunction
 
-    function! s:ListGitBranches(A, L, P) abort
-        if s:InGitRepo() && executable('git')
-            let output = system("git branch -a | cut -c 3-")
-            let output = substitute(output, '\s->\s[0-9a-zA-Z_\-]\+/[0-9a-zA-Z_\-]\+', '', 'g')
-            let output = substitute(output, 'remotes/', '', 'g')
-            return output
-        else
-            return ''
+    function! s:Gitk(options) abort
+        if s:InGitRepo()
+            call s:RunGitk(a:options)
         endif
     endfunction
-
-    command! -nargs=? -complete=file GitkFile call <SID>GitkFile(<q-args>)
 
     function! s:GitkFile(path) abort
         if s:InGitRepo()
@@ -79,6 +76,9 @@ if executable('gitk')
             endif
         endif
     endfunction
+
+    command! -nargs=? -complete=custom,<SID>ListGitBranches Gitk call <SID>Gitk(<q-args>)
+    command! -nargs=? -complete=file GitkFile call <SID>GitkFile(<q-args>)
 endif
 
 if s:is_windows
@@ -88,14 +88,47 @@ endif
 " Tig
 if executable('tig')
     if has('nvim')
-        command! -bar -nargs=* -complete=dir -complete=file Tig tabnew | call termopen("tig <args>") | startinsert
         augroup VimCommandHelpersTig
             autocmd!
             autocmd TermClose term://*tig* tabclose
         augroup END
+
+        function! s:RunTig(options) abort
+            let cmd = printf('tig %s', a:options)
+            tabnew
+            call termopen(cmd)
+            startinsert
+        endfunction
     elseif !has('gui_running')
-        command! -nargs=* -complete=dir -complete=file Tig !tig <args>
+        function! s:RunTig(options) abort
+            execute printf('silent! !tig %s', a:options)
+            redraw!
+        endfunction
+    else
+        function! s:RunTig(options) abort
+        endfunction
     endif
+
+    function! s:Tig(options) abort
+        if s:InGitRepo()
+            call s:RunTig(a:options)
+        endif
+    endfunction
+
+    function! s:TigFile(path) abort
+        if s:InGitRepo()
+            let path = a:path
+            if empty(path)
+                let path = expand("%")
+            endif
+            if strlen(path)
+                call s:RunTig(shellescape(path))
+            endif
+        endif
+    endfunction
+
+    command! -nargs=? -complete=custom,<SID>ListGitBranches Tig call <SID>Tig(<q-args>)
+    command! -nargs=? -complete=file TigFile call <SID>TigFile(<q-args>)
 endif
 
 " Sudo write
