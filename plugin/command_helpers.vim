@@ -1,13 +1,68 @@
 " command_helpers.vim
 " Maintainer: Phong Nguyen
-" Version:    0.4.2
+" Version:    0.5.0
 
 if exists('g:loaded_vim_command_helpers')
     finish
 endif
 
-" Copy yanked text to clipboard
-command! CopyYankedText let [@+, @*] = [@", @"]
+" Copy Commands {{{
+    if has('clipboard')
+        " Copy yanked text to clipboard
+        command! CopyYankedText let [@+, @*] = [@", @"]
+    endif
+
+    " Copy path to clipboard
+    function! s:copy_path_to_clipboard(path)
+        let @" = a:path
+        if has('clipboard')
+            let [@*, @+] = [@", @"]
+        endif
+        echo 'Copied: ' . @"
+    endfunction
+
+    function! s:copy_path(path, line)
+        let path = expand(a:path)
+        if a:line
+            let path .= ':' . line('.')
+        endif
+        call s:copy_path_to_clipboard(path)
+    endfunction
+
+    command! -bang CopyRelativePath call <SID>copy_path('%', <bang>0)
+    command! -bang CopyFullPath     call <SID>copy_path('%:p', <bang>0)
+    command! -bang CopyParentPath   call <SID>copy_path(<bang>0 ? '%:p:h' : '%:h', 0)
+
+    if get(g:, 'copypath_mappings', 1)
+        nnoremap <silent> yp :CopyRelativePath<CR>
+        nnoremap <silent> yP :CopyRelativePath!<CR>
+        nnoremap <silent> yu :CopyFullPath<CR>
+        nnoremap <silent> yU :CopyFullPath!<CR>
+        nnoremap <silent> yd :CopyParentPath<CR>
+        nnoremap <silent> yD :CopyParentPath!<CR>
+    endif
+" }}}
+
+" Highlight commands {{{
+    " Highlight current line
+    command! HighlightLine call matchadd('Search', '\%' . line('.') . 'l')
+
+    " Highlight the word underneath the cursor
+    command! HighlightWord call matchadd('Search', '\<\w*\%' . line('.') . 'l\%' . col('.') . 'c\w*\>')
+
+    " Highlight the words contained in the virtual column
+    command! HighlightColumns call matchadd('Search', '\<\w*\%' . virtcol('.') . 'v\w*\>')
+
+    " Clear the permanent highlights
+    command! ClearHightlights call clearmatches()
+
+    if get(g:, 'highlight_mappings', 1)
+        nnoremap <silent> <Leader>hl :HighlightLine<CR>
+        nnoremap <silent> <Leader>hw :HighlightWord<CR>
+        nnoremap <silent> <Leader>hv :HighlightColumns<CR>
+        nnoremap <silent> <Leader>hc :ClearHightlights<CR>
+    endif
+" }}}
 
 " Grep
 command! -bar -nargs=+ -complete=file Grep silent! grep! <args> | cwindow | redraw!
