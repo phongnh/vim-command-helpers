@@ -67,19 +67,20 @@ endif
 " Grep
 command! -bar -nargs=+ -complete=file Grep silent! grep! <args> | cwindow | redraw!
 
+let s:default_vcs_ignore = '--ignore ''.git'' --ignore ''.hg'' --ignore ''.svn'' --ignore ''.bzr'''
 if executable('rg')
     " https://github.com/BurntSushi/ripgrep
-    let &grepprg = 'rg --hidden -H --no-heading --vimgrep --smart-case'
+    let &grepprg = 'rg --hidden --vimgrep --smart-case'
 elseif executable('ag')
     " https://github.com/ggreer/the_silver_searcher
-    let &grepprg = 'ag --hidden --vimgrep --smart-case --ignore ''.hg'' --ignore ''.svn'' --ignore ''.git'' --ignore ''.bzr'''
+    let &grepprg = 'ag --hidden --vimgrep --smart-case' . s:default_vcs_ignore
 elseif executable('pt')
     " https://github.com/monochromegane/the_platinum_searcher
-    let &grepprg = 'pt --nocolor --hidden --nogroup --column --smart-case'
+    let &grepprg = 'pt --nocolor --hidden --nogroup --column --smart-case' . s:default_vcs_ignore
 endif
 set grepformat=%f:%l:%c:%m,%f:%l:%m
 
-let s:is_windows = has('win16') || has('win32') || has('win64') || has('win32unix')
+let s:is_windows = has('win64') || has('win32') || has('win32unix') || has('win16')
 
 " Git helpers
 function! s:InGitRepo() abort
