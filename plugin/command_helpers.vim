@@ -99,6 +99,20 @@ function! s:ListGitBranches(A, L, P) abort
     endif
 endfunction
 
+function! s:BuildPath(path)
+    return empty(a:path) ? expand("%") : a:path
+endfunction
+
+let s:has_uniq = executable('uniq')
+function! s:GitFullHistoryCommand(path)
+    let cmd = 'git log --name-only --format= --follow %s'
+    if s:has_uniq
+        let cmd .= ' | uniq'
+    endif
+    let cmd = '$(' . cmd . ')'
+    return printf(cmd, shellescape(a:path))
+endfunction
+
 " Gitk
 if executable('gitk')
     let s:gitk_cmd = 'silent! !gitk %s'
@@ -118,20 +132,23 @@ if executable('gitk')
         endif
     endfunction
 
-    function! s:GitkFile(path) abort
+    function! s:GitkFile(path, bang) abort
         if s:InGitRepo()
-            let path = a:path
+            let path = s:BuildPath(a:path)
             if empty(path)
-                let path = expand("%")
+                return
             endif
-            if strlen(path)
+
+            if a:bang
+                call s:RunGitk('-- ' . s:GitFullHistoryCommand(path))
+            else
                 call s:RunGitk(shellescape(path))
             endif
         endif
     endfunction
 
     command! -nargs=? -complete=custom,<SID>ListGitBranches Gitk call <SID>Gitk(<q-args>)
-    command! -nargs=? -complete=file GitkFile call <SID>GitkFile(<q-args>)
+    command! -nargs=? -bang -complete=file GitkFile call <SID>GitkFile(<q-args>, <bang>0)
 endif
 
 if s:is_windows
@@ -168,20 +185,22 @@ if executable('tig')
         endif
     endfunction
 
-    function! s:TigFile(path) abort
+    function! s:TigFile(path, bang) abort
         if s:InGitRepo()
-            let path = a:path
+            let path = s:BuildPath(a:path)
             if empty(path)
-                let path = expand("%")
+                return
             endif
-            if strlen(path)
+            if a:bang
+                call s:RunTig('-- ' . s:GitFullHistoryCommand(path))
+            else
                 call s:RunTig(shellescape(path))
             endif
         endif
     endfunction
 
     command! -nargs=? -complete=custom,<SID>ListGitBranches Tig call <SID>Tig(<q-args>)
-    command! -nargs=? -complete=file TigFile call <SID>TigFile(<q-args>)
+    command! -nargs=? -bang -complete=file TigFile call <SID>TigFile(<q-args>, <bang>0)
 endif
 
 " Sudo write
