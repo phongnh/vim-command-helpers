@@ -76,7 +76,7 @@ elseif executable('ag')
     let &grepprg = 'ag --hidden --vimgrep --smart-case' . s:default_vcs_ignore
 elseif executable('pt')
     " https://github.com/monochromegane/the_platinum_searcher
-    let &grepprg = 'pt --nocolor --hidden --nogroup --column --smart-case' . s:default_vcs_ignore
+    let &grepprg = 'pt --nocolor --nogroup --column --home-ptignore --hidden --smart-case' . s:default_vcs_ignore
 endif
 set grepformat=%f:%l:%c:%m,%f:%l:%m
 
