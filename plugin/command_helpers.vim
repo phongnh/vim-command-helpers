@@ -99,18 +99,30 @@ function! s:ListGitBranches(A, L, P) abort
     endif
 endfunction
 
-function! s:BuildPath(path)
+function! s:BuildPath(path) abort
     return empty(a:path) ? expand("%") : a:path
 endfunction
 
 let s:has_uniq = executable('uniq')
-function! s:GitFullHistoryCommand(path)
+function! s:GitFullHistoryCommand(path) abort
     let cmd = 'git log --name-only --format= --follow %s'
     if s:has_uniq
         let cmd .= ' | uniq'
     endif
     let cmd = '$(' . cmd . ')'
     return printf(cmd, shellescape(a:path))
+endfunction
+
+function! s:ParseRef(line) abort
+    if strlen(a:line)
+        let line = substitute(a:line, '^\s\+', '', '')
+        let line = substitute(line, '\s\+$', '', '')
+        let ref = get(split(line, ' '), 0, '')
+        if strlen(ref) && (ref !~# '^0\{7,\}$') && (ref =~# '^[a-z0-9]\{7,\}$')
+            return ref
+        endif
+    endif
+    return ''
 endfunction
 
 " Gitk
@@ -149,6 +161,21 @@ if executable('gitk')
 
     command! -nargs=? -complete=custom,<SID>ListGitBranches Gitk call <SID>Gitk(<q-args>)
     command! -nargs=? -bang -complete=file GitkFile call <SID>GitkFile(<q-args>, <bang>0)
+
+    nnoremap <silent> gK :GitkFile<CR>
+
+    function! s:GitkRef(line) abort
+        let ref = s:ParseRef(a:line)
+        if empty(ref)
+            return
+        endif
+        call s:RunGitk(ref)
+    endfunction
+
+    augroup CommandHelpersGitk
+        autocmd!
+        autocmd FileType fugitiveblame nnoremap <buffer> <silent> gK :call <SID>GitkRef(getline('.'))<CR>
+    augroup END
 endif
 
 if s:is_windows
@@ -158,7 +185,7 @@ endif
 " Tig
 if executable('tig')
     if has('nvim')
-        augroup VimCommandHelpersTig
+        augroup CommandHelpersTigNVim
             autocmd!
             autocmd TermClose term://*tig* tabclose
         augroup END
@@ -199,8 +226,36 @@ if executable('tig')
         endif
     endfunction
 
+    function! s:TigBlame(path, blame) abort
+        if s:InGitRepo()
+            let path = s:BuildPath(a:path)
+            if empty(path)
+                return
+            endif
+            call s:RunTig('blame -- ' . shellescape(path))
+        endif
+    endfunction
+
     command! -nargs=? -complete=custom,<SID>ListGitBranches Tig call <SID>Tig(<q-args>)
     command! -nargs=? -bang -complete=file TigFile call <SID>TigFile(<q-args>, <bang>0)
+    command! -nargs=? -bang -complete=file TigBlame call <SID>TigBlame(<q-args>, <bang>0)
+
+    nnoremap <silent> gC :Tig status<CR>
+    nnoremap <silent> gL :TigFile<CR>
+    nnoremap <silent> gB :TigBlame<CR>
+
+    function! s:TigShow(line) abort
+        let ref = s:ParseRef(a:line)
+        if empty(ref)
+            return
+        endif
+        call s:RunTig('show ' . ref)
+    endfunction
+
+    augroup CommandHelpersTig
+        autocmd!
+        autocmd FileType fugitiveblame nnoremap <buffer> <silent> gB :call <SID>TigShow(getline('.'))<CR>
+    augroup END
 endif
 
 " Sudo write
