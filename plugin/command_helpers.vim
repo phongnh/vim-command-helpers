@@ -67,6 +67,12 @@ endif
 " Grep
 command! -bar -nargs=+ -complete=file Grep silent! grep! <args> | cwindow | redraw!
 
+" LGrep
+command! -bar -nargs=+ -complete=file LGrep silent! lgrep! <args> | lwindow | redraw!
+
+" BGrep
+command! -bar -nargs=1 -complete=file BGrep silent! lgrep! <args> % | lwindow | redraw!
+
 if executable('rg')
     " https://github.com/BurntSushi/ripgrep
     let &grepprg = 'rg --hidden --vimgrep --smart-case'
