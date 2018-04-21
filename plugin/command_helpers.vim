@@ -67,16 +67,13 @@ endif
 " Grep
 command! -bar -nargs=+ -complete=file Grep silent! grep! <args> | cwindow | redraw!
 
-let s:default_vcs_ignore = '--ignore ''.git'' --ignore ''.hg'' --ignore ''.svn'' --ignore ''.bzr'''
 if executable('rg')
     " https://github.com/BurntSushi/ripgrep
     let &grepprg = 'rg --hidden --vimgrep --smart-case'
 elseif executable('ag')
     " https://github.com/ggreer/the_silver_searcher
+    let s:default_vcs_ignore = '--ignore ''.git'' --ignore ''.hg'' --ignore ''.svn'' --ignore ''.bzr'''
     let &grepprg = 'ag --hidden --vimgrep --smart-case' . s:default_vcs_ignore
-elseif executable('pt')
-    " https://github.com/monochromegane/the_platinum_searcher
-    let &grepprg = 'pt --nocolor --nogroup --column --home-ptignore --hidden --smart-case' . s:default_vcs_ignore
 endif
 set grepformat=%f:%l:%c:%m,%f:%l:%m
 
