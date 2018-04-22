@@ -2,7 +2,8 @@
 " Maintainer: Phong Nguyen
 " Version:    0.5.0
 
-if exists('g:loaded_vim_command_helpers')
+let g:loaded_vim_command_helpers = 0
+if get(g:, 'loaded_vim_command_helpers', 0)
     finish
 endif
 
@@ -66,12 +67,15 @@ endif
 
 " Grep
 command! -bar -nargs=+ -complete=file Grep silent! grep! <args> | cwindow | redraw!
+command! -nargs=? -complete=file GrepCword Grep '\b<cword>\b' <args>
 
 " LGrep
 command! -bar -nargs=+ -complete=file LGrep silent! lgrep! <args> | lwindow | redraw!
+command! -nargs=? -complete=file LGrepCword LGrep '\b<cword>\b' <args>
 
 " BGrep
-command! -bar -nargs=1 -complete=file BGrep silent! lgrep! <args> % | lwindow | redraw!
+command! -bar -nargs=1 BGrep silent! lgrep! <args> % | lwindow | redraw!
+command! -nargs=0 BGrepCword BGrep '\b<cword>\b'
 
 if executable('rg')
     " https://github.com/BurntSushi/ripgrep
