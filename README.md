@@ -9,7 +9,7 @@ My vim command helpers:
 * HighlightWord
 * HighlightColumns
 * ClearHightlights
-* Grep, GrepCword, LGrep, LGrepCword, BGrep, BBrepCword
+* Grep, GrepCword, LGrep, LGrepCword, BGrep, BGrepCword
 * Gitk, GitkFile
 * Tig, TigFile, TigBlame
 * SW
